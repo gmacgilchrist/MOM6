@@ -16,6 +16,7 @@ use MOM_diag_mediator,     only : diag_save_grids, diag_restore_grids, diag_copy
 use MOM_domains,           only : create_group_pass, do_group_pass, group_pass_type
 use MOM_domains,           only : To_North, To_East
 use MOM_EOS,               only : calculate_density, int_density_dz
+use MOM_EOS,               only : calculate_density_derivs
 use MOM_EOS,               only : gsw_sp_from_sr, gsw_pt_from_ct
 use MOM_error_handler,     only : MOM_error, FATAL, WARNING
 use MOM_file_parser,       only : get_param, log_version, param_file_type
@@ -223,6 +224,9 @@ subroutine calculate_diagnostic_fields(u, v, h, uh, vh, tv, ADp, CDp, p_surf, &
 
   ! coordinate variable potential density [kg m-3].
   real :: Rcv(SZI_(G),SZJ_(G),SZK_(G))
+  ! coordinate variables alpha and beta (density derivs) [degC-1 and psu-1]
+  real :: alpha(SZI_(G),SZJ_(G),SZK_(G))
+  real :: beta(SZI_(G),SZJ_(G),SZK_(G))
   ! Two temporary work arrays
   real :: work_3d(SZI_(G),SZJ_(G),SZK_(G))
   real :: work_2d(SZI_(G),SZJ_(G))
@@ -615,6 +619,20 @@ subroutine calculate_diagnostic_fields(u, v, h, uh, vh, tv, ADp, CDp, p_surf, &
       enddo
       if (CS%id_rhoinsitu > 0) call post_data(CS%id_rhoinsitu, Rcv, CS%diag)
     endif
+
+    if (CS%id_alpha > 0 .or. CS%id_beta > 0) then
+!$OMP parallel do default(none) shared(tv,Rcv,is,ie,js,je,nz,pressure_1d)
+      do j=js,je
+        pressure_1d(:) = 0.
+          do k=1,nz ;
+            pressure_1d(:) =  pressure_1d(:) + 0.5 * h(:,j,k) * GV%H_to_Pa ! Pressure in middle of layer k
+            call calculate_density_derivs(tv%T(:,j,k),tv%S(:,j,k),pressure_1d, &
+                               alpha(:,j,k),beta(:,j,k),is,ie-is+1, tv%eqn_of_state)
+      enddo ; enddo
+      if (CS%id_alpha > 0) call post_data(CS%id_alpha, alpha, CS%diag)
+      if (CS%id_beta > 0) call post_data(CS%id_beta, beta, CS%diag)
+    endif
+
   endif
 
   if ((CS%id_cg1>0) .or. (CS%id_Rd1>0) .or. (CS%id_cfl_cg1>0) .or. &
@@ -1571,6 +1589,11 @@ subroutine MOM_diagnostics_init(MIS, ADp, CDp, Time, G, GV, US, param_file, diag
       'Potential density referenced to 2000 dbar', 'kg m-3')
   CS%id_rhoinsitu = register_diag_field('ocean_model', 'rhoinsitu', diag%axesTL, Time, &
       'In situ density', 'kg m-3')
+
+  CS%id_alpha = register_diag_field('ocean_model', 'alpha', diag%axesTL, Time, &
+      'Partial derivative of density with respect to temperature', 'degC-1')
+  CS%id_beta = register_diag_field('ocean_model', 'beta', diag%axesTL, Time, &
+      'Partial derivative of density with respect to salinity', 'psu-1')
 
   CS%id_du_dt = register_diag_field('ocean_model', 'dudt', diag%axesCuL, Time, &
       'Zonal Acceleration', 'm s-2')
