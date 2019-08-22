@@ -134,6 +134,7 @@ type, public :: diagnostics_CS ; private
   integer :: id_pbo            = -1
   integer :: id_thkcello       = -1, id_rhoinsitu      = -1
   integer :: id_rhopot0        = -1, id_rhopot2        = -1
+  integer :: id_alpha          = -1, id_beta           = -1
   integer :: id_h_pre_sync     = -1   !!@}
   !> The control structure for calculating wave speed.
   type(wave_speed_CS), pointer :: wave_speed_CSp => NULL()
