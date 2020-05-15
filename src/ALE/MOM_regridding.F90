@@ -1925,12 +1925,13 @@ end subroutine convective_adjustment
 
 !------------------------------------------------------------------------------
 !> Return the index of a sorted array of scalar values
-subroutine sort_scalar_k(G, GV, h, tv, ksort)
+subroutine sort_scalar_k(G, GV, h, phi, ksort)
   type(ocean_grid_type),   intent(in)    :: G    !< The ocean's grid structure
   type(verticalGrid_type), intent(in)    :: GV   !< The ocean's vertical grid structure
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
                            intent(inout) :: h    !< Layer thicknesses [H ~> m or kg m-2]
-  type(thermo_var_ptrs),   intent(inout) :: tv   !< A structure pointing to various thermodynamic variables
+  real, dimension(SZI_(G),SZJ_(G),SZK_(GV), &
+                           intent(in)    :: phi  !< Array of scalar quantity to be sorted
   integer, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
                            intent(out) :: ksort !< An array of indicies for a 
                                                   !! monotonically increasing scalar
@@ -1942,7 +1943,7 @@ subroutine sort_scalar_k(G, GV, h, tv, ksort)
 
   ! Local variables
   integer   :: i, j, k
-  real      :: T0, T1       ! temperatures
+  real      :: P0, P1       ! temperatures
   logical   :: monotonic
 
   ! Loop on columns
@@ -1953,10 +1954,10 @@ subroutine sort_scalar_k(G, GV, h, tv, ksort)
       monotonic = .true.
       do k = 1,GV%ke-1
         ! Gather information of scalar value in current and next cells
-        T0 = tv%T(i,j,k)  ; T1 = tv%T(i,j,k+1)
+        P0 = phi(i,j,k)  ; P1 = phi(i,j,k+1)
         ! If the scalar value of the current cell is larger than the scalar
         ! below it, we swap the cell indices
-        if ( T0 > T1 ) then
+        if ( P0 > P1 ) then
           ksort(i,j,k) = k+1 ; ksort(i,j,k+1) = k
           monotonic = .false.
         endif
