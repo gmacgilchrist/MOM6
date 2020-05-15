@@ -1,17 +1,18 @@
 !> Regrid columns for the continuous isopycnal (rho) coordinate
-module coord_rho
+module coord_scalar
 
 ! This file is part of MOM6. See LICENSE.md for the license.
 
 use MOM_error_handler, only : MOM_error, FATAL
 use MOM_remapping,     only : remapping_CS, remapping_core_h
+use MOM_regridding,    only : sort_scalar_k_1d
 use MOM_EOS,           only : EOS_type, calculate_density
 use regrid_interp,     only : interp_CS_type, build_and_interpolate_grid, DEGREE_MAX
 
 implicit none ; private
 
-!> Control structure containing required parameters for the rho coordinate
-type, public :: rho_CS ; private
+!> Control structure containing required parameters for the scalar coordinate
+type, public :: scalar_CS ; private
 
   !> Number of layers
   integer :: nk
@@ -19,56 +20,51 @@ type, public :: rho_CS ; private
   !> Minimum thickness allowed for layers, often in [H ~> m or kg m-2]
   real :: min_thickness = 0.
 
-  !> Reference pressure for density calculations [R L2 T-2 ~> Pa]
-  real :: ref_pressure
-
   !> If true, integrate for interface positions from the top downward.
   !! If false, integrate from the bottom upward, as does the rest of the model.
   logical :: integrate_downward_for_e = .false.
 
-  !> Nominal density of interfaces [R ~> kg m-3]
-  real, allocatable, dimension(:) :: target_density
+  !> Nominal scalar value of interfaces [R ~> kg m-3]
+  real, allocatable, dimension(:) :: target_scalar
 
   !> Interpolation control structure
   type(interp_CS_type) :: interp_CS
-end type rho_CS
+end type scalar_CS
 
-public init_coord_rho, set_rho_params, build_rho_column, old_inflate_layers_1d, end_coord_rho
+public init_coord_scalar, set_scalar_params, build_scalar_column, old_inflate_layers_1d, end_coord_scalar
 
 contains
 
 !> Initialise a rho_CS with pointers to parameters
-subroutine init_coord_rho(CS, nk, ref_pressure, target_density, interp_CS)
-  type(rho_CS),         pointer    :: CS !< Unassociated pointer to hold the control structure
+subroutine init_coord_scalar(CS, nk, target_scalar, interp_CS)
+  type(scalar_CS),         pointer    :: CS !< Unassociated pointer to hold the control structure
   integer,              intent(in) :: nk !< Number of layers in the grid
-  real,                 intent(in) :: ref_pressure !< Coordinate reference pressure [R L2 T-2 ~> Pa]
-  real, dimension(:),   intent(in) :: target_density !< Nominal density of interfaces [R ~> kg m-3]
+  real, dimension(:),   intent(in) :: target_scalar !< Nominal scalar value of interfaces [R ~> kg m-3]
   type(interp_CS_type), intent(in) :: interp_CS !< Controls for interpolation
 
   if (associated(CS)) call MOM_error(FATAL, "init_coord_rho: CS already associated!")
   allocate(CS)
-  allocate(CS%target_density(nk+1))
+  allocate(CS%target_scalar(nk+1))
 
   CS%nk                = nk
-  CS%ref_pressure      = ref_pressure
-  CS%target_density(:) = target_density(:)
+  CS%target_phi(:)     = target_scalar(:)
   CS%interp_CS         = interp_CS
 
-end subroutine init_coord_rho
+end subroutine init_coord_scalar
 
 !> This subroutine deallocates memory in the control structure for the coord_rho module
-subroutine end_coord_rho(CS)
-  type(rho_CS), pointer :: CS !< Coordinate control structure
+subroutine end_coord_scalar(CS)
+  type(scalar_CS), pointer :: CS !< Coordinate control structure
 
   ! nothing to do
   if (.not. associated(CS)) return
-  deallocate(CS%target_density)
+  deallocate(CS%target_scalar)
   deallocate(CS)
-end subroutine end_coord_rho
+end subroutine end_coord_scalar
 
 !> This subroutine can be used to set the parameters for the coord_rho module
-subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS)
-  type(rho_CS),      pointer    :: CS !< Coordinate control structure
+subroutine set_scalar_params(CS, min_thickness, integrate_downward_for_e, interp_CS)
+  type(scalar_CS),      pointer    :: CS !< Coordinate control structure
   real,    optional, intent(in) :: min_thickness !< Minimum allowed thickness [H ~> m or kg m-2]
   logical, optional, intent(in) :: integrate_downward_for_e !< If true, integrate for interface
                                       !! positions from the top downward.  If false, integrate
@@ -81,13 +77,13 @@ subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS
   if (present(min_thickness)) CS%min_thickness = min_thickness
   if (present(integrate_downward_for_e)) CS%integrate_downward_for_e = integrate_downward_for_e
   if (present(interp_CS)) CS%interp_CS = interp_CS
-end subroutine set_rho_params
+end subroutine set_scalar_params
 
-!> Build a rho coordinate column
+!> Build a scalar coordinate column
 !!
-!! 1. Density profiles are calculated on the source grid.
-!! 2. Positions of target densities (for interfaces) are found by interpolation.
-subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
+!! 1. Scalar profiles are determined on the source grid.
+!! 2. Positions of target scalars (for interfaces) are found by interpolation.
+subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
                             h_neglect, h_neglect_edge)
   type(rho_CS),        intent(in)    :: CS !< coord_rho control structure
   integer,             intent(in)    :: nz !< Number of levels on source grid (i.e. length of  h, T, S)
