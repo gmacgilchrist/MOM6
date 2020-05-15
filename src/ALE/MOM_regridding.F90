@@ -1928,7 +1928,7 @@ end subroutine convective_adjustment
 subroutine sort_scalar_k_1d(G, GV, phi, ksort)
   type(ocean_grid_type),   intent(in)    :: G    !< The ocean's grid structure
   type(verticalGrid_type), intent(in)    :: GV   !< The ocean's vertical grid structure
-  real, dimension(SZK_(GV), &
+  real, dimension(SZK_(GV)), &
                            intent(in)    :: phi  !< Array of scalar quantity to be sorted
   integer, dimension(SZK_(GV)), &
                            intent(out) :: ksort !< An array of indicies for a 
@@ -1968,7 +1968,7 @@ end subroutine sort_scalar_k_1d
 subroutine sort_scalar_k(G, GV, phi, ksort)
   type(ocean_grid_type),   intent(in)    :: G    !< The ocean's grid structure
   type(verticalGrid_type), intent(in)    :: GV   !< The ocean's vertical grid structure
-  real, dimension(SZI_(G),SZJ_(G),SZK_(GV), &
+  real, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
                            intent(in)    :: phi  !< Array of scalar quantity to be sorted
   integer, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
                            intent(out) :: ksort !< An array of indicies for a 
