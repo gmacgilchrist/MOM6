@@ -7,6 +7,7 @@ use MOM_error_handler, only : MOM_error, FATAL
 use MOM_remapping,     only : remapping_CS, remapping_core_h
 use MOM_EOS,           only : EOS_type, calculate_density
 use regrid_interp,     only : interp_CS_type, build_and_interpolate_grid, DEGREE_MAX
+use coord_utils,       only : build_scalar_column
 
 implicit none ; private
 
@@ -87,7 +88,7 @@ end subroutine set_rho_params
 !!
 !! 1. Density profiles are calculated on the source grid.
 !! 2. Positions of target densities (for interfaces) are found by interpolation.
-subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
+subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, ksort, &
                             h_neglect, h_neglect_edge)
   type(rho_CS),        intent(in)    :: CS !< coord_rho control structure
   integer,             intent(in)    :: nz !< Number of levels on source grid (i.e. length of  h, T, S)
@@ -98,6 +99,7 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
   type(EOS_type),      pointer       :: eqn_of_state !< Equation of state structure
   real, dimension(CS%nk+1), &
                        intent(inout) :: z_interface !< Absolute positions of interfaces
+  real, dimension(nz), intent(out) :: ksort  !< k-indices for monotonically increasing column [ppt]
   real,      optional, intent(in)    :: h_neglect !< A negligibly small width for the purpose
                                              !! of cell reconstructions [H ~> m or kg m-2]
   real,      optional, intent(in)    :: h_neglect_edge !< A negligibly small width for the purpose
@@ -116,56 +118,13 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
   ! Construct source column with vanished layers removed (stored in h_nv)
   call copy_finite_thicknesses(nz, h, CS%min_thickness, count_nonzero_layers, h_nv, mapping)
 
-  if (count_nonzero_layers > 1) then
-    xTmp(1) = 0.0
-    do k = 1,count_nonzero_layers
-      xTmp(k+1) = xTmp(k) + h_nv(k)
-    enddo
-
-    ! Compute densities on source column
-    pres(:) = CS%ref_pressure
-    call calculate_density(T, S, pres, densities, eqn_of_state)
-    do k = 1,count_nonzero_layers
-      densities(k) = densities(mapping(k))
-    enddo
-
-    ! Based on source column density profile, interpolate to generate a new grid
-    call build_and_interpolate_grid(CS%interp_CS, densities, count_nonzero_layers, &
-                                    h_nv, xTmp, CS%target_density, CS%nk, h_new, &
-                                    x1, h_neglect, h_neglect_edge)
-
-    ! Inflate vanished layers
-    call old_inflate_layers_1d(CS%min_thickness, CS%nk, h_new)
-
-    ! Comment: The following adjustment of h_new, and re-calculation of h_new via x1 needs to be removed
-    x1(1) = 0.0 ; do k = 1,CS%nk ; x1(k+1) = x1(k) + h_new(k) ; enddo
-    do k = 1,CS%nk
-      h_new(k) = x1(k+1) - x1(k)
-    enddo
-
-  else ! count_nonzero_layers <= 1
-    if (nz == CS%nk) then
-      h_new(:) = h(:) ! This keeps old behavior
-    else
-      h_new(:) = 0.
-      h_new(1) = h(1)
-    endif
-  endif
-
-  ! Return interface positions
-  if (CS%integrate_downward_for_e) then
-    ! Remapping is defined integrating from zero
-    z_interface(1) = 0.
-    do k = 1,CS%nk
-      z_interface(k+1) = z_interface(k) - h_new(k)
-    enddo
-  else
-    ! The rest of the model defines grids integrating up from the bottom
-    z_interface(CS%nk+1) = -depth
-    do k = CS%nk,1,-1
-      z_interface(k) = z_interface(k+1) + h_new(k)
-    enddo
-  endif
+  ! Compute densities on source column
+  pres(:) = CS%ref_pressure
+  call calculate_density(T, S, pres, densities, eqn_of_state)
+   
+  ! Build column
+  call build_scalar_column(CS, nz, depth, h, densities, z_interface, ksort, &
+                            h_neglect, h_neglect_edge)
 
 end subroutine build_rho_column
 
