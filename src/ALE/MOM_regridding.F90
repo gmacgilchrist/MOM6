@@ -2023,13 +2023,10 @@ end subroutine convective_adjustment
 
 !------------------------------------------------------------------------------
 !> Return the index of a sorted array of scalar values
-subroutine sort_scalar_k_1d(G, GV, phi, ksort)
-  type(ocean_grid_type),   intent(in)    :: G    !< The ocean's grid structure
-  type(verticalGrid_type), intent(in)    :: GV   !< The ocean's vertical grid structure
-  real, dimension(SZK_(GV)), &
-                           intent(inout)    :: phi  !< Array of scalar quantity to be sorted
-  integer, dimension(SZK_(GV)), &
-                           intent(out) :: ksort !< An array of indicies for a 
+subroutine sort_scalar_k_1d(nz, phi, ksort)
+  integer,                 intent(in)     :: nz !< Number of levels n grid
+    real, dimension(nz),   intent(inout)  :: phi  !< Array of scalar quantity to be sorted
+  integer, dimension(nz),  intent(out)    :: ksort !< An array of indicies for a 
                                                   !! monotonically increasing scalar
 !------------------------------------------------------------------------------
 ! Check each water column to see if a given scalar is monotonically increasing.
@@ -2045,7 +2042,7 @@ subroutine sort_scalar_k_1d(G, GV, phi, ksort)
   ! Repeat swapping of indices until complete
   do
     monotonic = .true.
-    do k = 1,GV%ke-1
+    do k = 1,nz-1
       ! Gather information of scalar value in current and next cells
       P0 = phi(k)  ; P1 = phi(k+1)
       ! If the scalar value of the current cell is larger than the scalar
