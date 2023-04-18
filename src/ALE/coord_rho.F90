@@ -31,6 +31,10 @@ type, public :: rho_CS ; private
 
   !> Interpolation control structure
   type(interp_CS_type) :: interp_CS
+
+  !> If true, water column is sorted in rho prior to regrid
+  logical :: needs_sorting = .false.
+  
 end type rho_CS
 
 public init_coord_rho, set_rho_params, build_rho_column, old_inflate_layers_1d, end_coord_rho
