@@ -150,6 +150,7 @@ public getCoordinateResolution, getCoordinateInterfaces
 public getCoordinateUnits, getCoordinateShortName, getStaticThickness
 public DEFAULT_COORDINATE_MODE
 public get_zlike_CS, get_sigma_CS, get_rho_CS
+public sort_scalar_k_1d
 
 !> Documentation for coordinate options
 character(len=*), parameter, public :: regriddingCoordinateModeDoc = &
@@ -2058,7 +2059,6 @@ subroutine sort_scalar_k_1d(nz, phi, ksort)
   enddo
 
 end subroutine sort_scalar_k_1d
-
 
 !------------------------------------------------------------------------------
 !> Return a uniform resolution vector in the units of the coordinate
