@@ -29,12 +29,12 @@ type, public :: rho_CS ; private
   !> Nominal density of interfaces [R ~> kg m-3]
   real, allocatable, dimension(:) :: target_density
 
+  !> If true, water column is sorted in rho prior to regrid
+  logical :: needs_sorting = .false.
+
   !> Interpolation control structure
   type(interp_CS_type) :: interp_CS
 
-  !> If true, water column is sorted in rho prior to regrid
-  logical :: needs_sorting = .false.
-  
 end type rho_CS
 
 public init_coord_rho, set_rho_params, build_rho_column, old_inflate_layers_1d, end_coord_rho
@@ -47,6 +47,7 @@ subroutine init_coord_rho(CS, nk, ref_pressure, target_density, interp_CS)
   integer,              intent(in) :: nk !< Number of layers in the grid
   real,                 intent(in) :: ref_pressure !< Coordinate reference pressure [R L2 T-2 ~> Pa]
   real, dimension(:),   intent(in) :: target_density !< Nominal density of interfaces [R ~> kg m-3]
+  logical,              intent(in) :: needs_sorting !< Whether to sort column prior to regrid
   type(interp_CS_type), intent(in) :: interp_CS !< Controls for interpolation
 
   if (associated(CS)) call MOM_error(FATAL, "init_coord_rho: CS already associated!")
@@ -56,6 +57,7 @@ subroutine init_coord_rho(CS, nk, ref_pressure, target_density, interp_CS)
   CS%nk                = nk
   CS%ref_pressure      = ref_pressure
   CS%target_density(:) = target_density(:)
+  CS%needs_sorting     = needs_sorting
   CS%interp_CS         = interp_CS
 
 end subroutine init_coord_rho
