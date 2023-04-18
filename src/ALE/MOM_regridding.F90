@@ -2024,7 +2024,7 @@ end subroutine convective_adjustment
 !------------------------------------------------------------------------------
 !> Return the index of a sorted array of scalar values
 subroutine sort_scalar_k_1d(nz, phi, ksort)
-  integer,                 intent(in)     :: nz !< Number of levels n grid
+  integer,                 intent(in)     :: nz !< Number of levels on grid
   real, dimension(nz),     intent(inout)  :: phi  !< Array of scalar quantity to be sorted
   integer, dimension(nz),  intent(out)    :: ksort !< An array of indicies for a 
                                                   !! monotonically increasing scalar
