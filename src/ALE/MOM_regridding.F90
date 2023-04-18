@@ -118,6 +118,9 @@ type, public :: regridding_CS ; private
   !! If false, integrate from the bottom upward, as does the rest of the model.
   logical :: integrate_downward_for_e = .true.
 
+  !> If true, water column is sorted in coordinate prior to regridding
+  logical :: needs_sorting = .false.
+
   !> The vintage of the order of arithmetic and expressions to use for remapping.
   !! Values below 20190101 recover the remapping answers from 2018.
   !! Higher values use more robust forms of the same remapping expressions.
