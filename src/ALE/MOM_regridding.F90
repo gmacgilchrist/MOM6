@@ -2122,7 +2122,7 @@ subroutine initCoord(CS, GV, US, coord_mode, param_file)
   case (REGRIDDING_SIGMA)
     call init_coord_sigma(CS%sigma_CS, CS%nk, CS%coordinateResolution)
   case (REGRIDDING_RHO)
-    call init_coord_rho(CS%rho_CS, CS%nk, CS%ref_pressure, CS%target_density, CS%interp_CS)
+    call init_coord_rho(CS%rho_CS, CS%nk, CS%ref_pressure, CS%target_density, CS%needs_sorting, CS%interp_CS)
   case (REGRIDDING_HYCOM1)
     call init_coord_hycom(CS%hycom_CS, CS%nk, CS%coordinateResolution, CS%target_density, &
                           CS%interp_CS)
