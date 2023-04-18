@@ -5,9 +5,9 @@ module coord_rho
 
 use MOM_error_handler, only : MOM_error, FATAL
 use MOM_remapping,     only : remapping_CS, remapping_core_h
-use MOM_regridding,    only : sort_scalar_k_1d
 use MOM_EOS,           only : EOS_type, calculate_density
 use regrid_interp,     only : interp_CS_type, build_and_interpolate_grid, DEGREE_MAX
+use regrid_interp,    only : sort_scalar_k_1d
 
 implicit none ; private
 

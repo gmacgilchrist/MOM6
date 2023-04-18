@@ -150,7 +150,6 @@ public getCoordinateResolution, getCoordinateInterfaces
 public getCoordinateUnits, getCoordinateShortName, getStaticThickness
 public DEFAULT_COORDINATE_MODE
 public get_zlike_CS, get_sigma_CS, get_rho_CS
-public sort_scalar_k_1d
 
 !> Documentation for coordinate options
 character(len=*), parameter, public :: regriddingCoordinateModeDoc = &
@@ -2021,44 +2020,6 @@ subroutine convective_adjustment(G, GV, h, tv)
   enddo ; enddo  ! i & j
 
 end subroutine convective_adjustment
-
-!------------------------------------------------------------------------------
-!> Return the index of a sorted array of scalar values
-subroutine sort_scalar_k_1d(nz, phi, ksort)
-  integer,                 intent(in)     :: nz !< Number of levels on grid
-  real, dimension(nz),     intent(inout)  :: phi  !< Array of scalar quantity to be sorted
-  integer, dimension(nz),  intent(out)    :: ksort !< An array of indicies for a 
-                                                  !! monotonically increasing scalar
-!------------------------------------------------------------------------------
-! Check each water column to see if a given scalar is monotonically increasing.
-! If not, return an array of the sorted indices (bubble sort algorithm).
-! No need to return the sorted scalar array itself.
-!------------------------------------------------------------------------------
-
-  ! Local variables
-  integer   :: k
-  real      :: P0, P1       ! tracers
-  logical   :: monotonic
-
-  ! Repeat swapping of indices until complete
-  do
-    monotonic = .true.
-    do k = 1,nz-1
-      ! Gather information of scalar value in current and next cells
-      P0 = phi(k)  ; P1 = phi(k+1)
-      ! If the scalar value of the current cell is larger than the scalar
-      ! below it, we swap the cell indices
-      if ( P0 > P1 ) then
-        phi(k) = P1 ; phi(k+1) = P0
-        ksort(k) = k+1 ; ksort(k+1) = k
-        monotonic = .false.
-      endif
-    enddo  ! k
-
-    if ( monotonic ) exit
-  enddo
-
-end subroutine sort_scalar_k_1d
 
 !------------------------------------------------------------------------------
 !> Return a uniform resolution vector in the units of the coordinate
