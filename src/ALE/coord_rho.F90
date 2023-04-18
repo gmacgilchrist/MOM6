@@ -99,7 +99,7 @@ end subroutine set_rho_params
 !! 1. Density profiles are calculated on the source grid.
 !! 2. Positions of target densities (for interfaces) are found by interpolation.
 subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
-                            z_rigid_top, eta_orig, h_neglect, h_neglect_edge)
+                            ksort, z_rigid_top, eta_orig, h_neglect, h_neglect_edge)
   type(rho_CS),        intent(in)    :: CS !< coord_rho control structure
   integer,             intent(in)    :: nz !< Number of levels on source grid (i.e. length of  h, T, S)
   real,                intent(in)    :: depth !< Depth of ocean bottom (positive downward) [H ~> m or kg m-2]
@@ -109,6 +109,9 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
   type(EOS_type),      intent(in)    :: eqn_of_state !< Equation of state structure
   real, dimension(CS%nk+1), &
                        intent(inout) :: z_interface !< Absolute positions of interfaces
+  integer, optional, dimension(nz), &
+                       intent(out) :: ksort !< Array of indicies for a 
+                                            !! monotonically increasing scalae
   real, optional,      intent(in)    :: z_rigid_top !< The height of a rigid top (positive upward in the same
   !! units as depth) [Z ~> m] or [H ~> m or kg m-2]
   real, optional,      intent(in)    :: eta_orig !< The actual original height of the top in the same
