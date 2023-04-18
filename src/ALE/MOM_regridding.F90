@@ -2420,7 +2420,7 @@ subroutine set_regrid_params( CS, boundary_extrapolation, min_thickness, old_gri
              interp_scheme, depth_of_time_filter_shallow, depth_of_time_filter_deep, &
              compress_fraction, ref_pressure, dz_min_surface, nz_fixed_surface, Rho_ML_avg_depth, &
              nlay_ML_to_interior, fix_haloclines, halocline_filt_len, halocline_strat_tol, &
-             integrate_downward_for_e, remap_answers_2018, remap_answer_date, &
+             integrate_downward_for_e, needs_sorting, remap_answers_2018, remap_answer_date, &
              adaptTimeRatio, adaptZoom, adaptZoomCoeff, adaptBuoyCoeff, adaptAlpha, adaptDoMin, adaptDrho0)
   type(regridding_CS), intent(inout) :: CS !< Regridding control structure
   logical, optional, intent(in) :: boundary_extrapolation !< Extrapolate in boundary cells
@@ -2447,6 +2447,7 @@ subroutine set_regrid_params( CS, boundary_extrapolation, min_thickness, old_gri
                                                     !! halocline region.
   logical, optional, intent(in) :: integrate_downward_for_e !< If true, integrate for interface positions downward
                                                     !! from the top.
+  logical, optional, intent(in) :: needs_sorting    !< If true, water column is sorted in coordinate prior to regrid
   logical, optional, intent(in) :: remap_answers_2018 !< If true, use the order of arithmetic and expressions
                                                     !! that recover the remapping answers from 2018.  Otherwise
                                                     !! use more robust but mathematically equivalent expressions.
@@ -2502,6 +2503,7 @@ subroutine set_regrid_params( CS, boundary_extrapolation, min_thickness, old_gri
     if (present(ref_pressure)) call set_rho_params(CS%rho_CS, ref_pressure=ref_pressure)
     if (present(integrate_downward_for_e)) &
       call set_rho_params(CS%rho_CS, integrate_downward_for_e=integrate_downward_for_e)
+    if (present(needs_sorting)) call set_rho_params(CS%rho_CS, needs_sorting=needs_sorting)
     if (associated(CS%rho_CS) .and. (present(interp_scheme) .or. present(boundary_extrapolation))) &
       call set_rho_params(CS%rho_CS, interp_CS=CS%interp_CS)
   case (REGRIDDING_HYCOM1)

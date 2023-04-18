@@ -42,7 +42,7 @@ public init_coord_rho, set_rho_params, build_rho_column, old_inflate_layers_1d, 
 contains
 
 !> Initialise a rho_CS with pointers to parameters
-subroutine init_coord_rho(CS, nk, ref_pressure, target_density, interp_CS)
+subroutine init_coord_rho(CS, nk, ref_pressure, target_density, needs_sorting, interp_CS)
   type(rho_CS),         pointer    :: CS !< Unassociated pointer to hold the control structure
   integer,              intent(in) :: nk !< Number of layers in the grid
   real,                 intent(in) :: ref_pressure !< Coordinate reference pressure [R L2 T-2 ~> Pa]
@@ -73,7 +73,7 @@ subroutine end_coord_rho(CS)
 end subroutine end_coord_rho
 
 !> This subroutine can be used to set the parameters for the coord_rho module
-subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS, ref_pressure)
+subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS, ref_pressure, needs_sorting)
   type(rho_CS),      pointer    :: CS !< Coordinate control structure
   real,    optional, intent(in) :: min_thickness !< Minimum allowed thickness [H ~> m or kg m-2]
   logical, optional, intent(in) :: integrate_downward_for_e !< If true, integrate for interface
