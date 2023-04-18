@@ -2023,13 +2023,11 @@ end subroutine convective_adjustment
 
 !------------------------------------------------------------------------------
 !> Return the index of a sorted array of scalar values
-subroutine sort_scalar_k_1d(G, GV, phi, phisort, ksort)
+subroutine sort_scalar_k_1d(G, GV, phi, ksort)
   type(ocean_grid_type),   intent(in)    :: G    !< The ocean's grid structure
   type(verticalGrid_type), intent(in)    :: GV   !< The ocean's vertical grid structure
   real, dimension(SZK_(GV)), &
-                           intent(in)    :: phi  !< Array of scalar quantity to be sorted
-  real, dimension(SZK_(GV)), &
-                           intent(out)    :: phisort  !< Array of sorted scalar quantity
+                           intent(inout)    :: phi  !< Array of scalar quantity to be sorted
   integer, dimension(SZK_(GV)), &
                            intent(out) :: ksort !< An array of indicies for a 
                                                   !! monotonically increasing scalar
@@ -2041,7 +2039,7 @@ subroutine sort_scalar_k_1d(G, GV, phi, phisort, ksort)
 
   ! Local variables
   integer   :: k
-  real      :: P0, P1       ! temperatures
+  real      :: P0, P1       ! tracers
   logical   :: monotonic
 
   ! Repeat swapping of indices until complete
@@ -2053,7 +2051,7 @@ subroutine sort_scalar_k_1d(G, GV, phi, phisort, ksort)
       ! If the scalar value of the current cell is larger than the scalar
       ! below it, we swap the cell indices
       if ( P0 > P1 ) then
-        phisort(k) = P1 ; phisort(k+1) = P0
+        phi(k) = P1 ; phi(k+1) = P0
         ksort(k) = k+1 ; ksort(k+1) = k
         monotonic = .false.
       endif

@@ -156,6 +156,9 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
       densities(k) = densities(mapping(k))
     enddo
 
+    if ( CS%needs_sorting ) then
+      call sort_scalar_k_1d(G,GV, densities, densities_sorted, ksort)
+
     ! Based on source column density profile, interpolate to generate a new grid
     call build_and_interpolate_grid(CS%interp_CS, densities, count_nonzero_layers, &
                                     h_nv, xTmp, CS%target_density, CS%nk, h_new, &
