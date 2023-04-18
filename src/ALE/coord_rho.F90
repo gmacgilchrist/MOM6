@@ -81,6 +81,7 @@ subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS
                                       !! from the bottom upward, as does the rest of the model.
   real,    optional, intent(in) :: ref_pressure     !< The reference pressure for density-dependent
                                                     !! coordinates [R L2 T-2 ~> Pa]
+  logical, optional, intent(in) :: needs_sorting !< Whether to sort column prior to regrid
 
   type(interp_CS_type), optional, intent(in) :: interp_CS !< Controls for interpolation
 
@@ -90,6 +91,7 @@ subroutine set_rho_params(CS, min_thickness, integrate_downward_for_e, interp_CS
   if (present(integrate_downward_for_e)) CS%integrate_downward_for_e = integrate_downward_for_e
   if (present(interp_CS)) CS%interp_CS = interp_CS
   if (present(ref_pressure)) CS%ref_pressure = ref_pressure
+  if (present(needs_sorting)) CS%needs_sorting = needs_sorting
 end subroutine set_rho_params
 
 !> Build a rho coordinate column
