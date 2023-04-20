@@ -150,6 +150,7 @@ public getCoordinateResolution, getCoordinateInterfaces
 public getCoordinateUnits, getCoordinateShortName, getStaticThickness
 public DEFAULT_COORDINATE_MODE
 public get_zlike_CS, get_sigma_CS, get_rho_CS
+public check_if_needs_sorting
 
 !> Documentation for coordinate options
 character(len=*), parameter, public :: regriddingCoordinateModeDoc = &
@@ -2642,6 +2643,14 @@ integer function rho_function1( string, rho_target )
   rho_function1 = nk
 
 end function rho_function1
+
+subroutine check_if_needs_sorting(CS,needs_sorting)
+  type(regridding_CS),  intent(in)  :: CS
+  logical,              intent(out) :: needs_sorting
+
+  needs_sorting = CS%needs_sorting
+
+end subroutine check_if_needs_sorting
 
 !> \namespace mom_regridding
 !!

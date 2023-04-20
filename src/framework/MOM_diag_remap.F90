@@ -79,6 +79,7 @@ use regrid_consts,        only : coordinateMode
 use coord_zlike,          only : build_zstar_column
 use coord_sigma,          only : build_sigma_column
 use coord_rho,            only : build_rho_column
+use MOM_regridding,       only : check_if_needs_sorting
 
 
 implicit none ; private
@@ -282,7 +283,8 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
 
   ! Local variables
   real, dimension(remap_cs%nz + 1) :: zInterfaces ! Interface positions [H ~> m or kg m-2]
-  integer, dimension(remap_cs%nz)  :: ksort !< Array of indices for sorted column
+  logical :: needs_sorting
+  integer, dimension(GV%ke)  :: ksort !< Array of indices for sorted column
   real :: h_neglect, h_neglect_edge ! Negligible thicknesses [H ~> m or kg m-2]
   integer :: i, j, k, nz
 
@@ -340,6 +342,11 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
     do k = 1,nz
       h_target(i,j,k) = zInterfaces(k) - zInterfaces(k+1)
     enddo
+
+    call check_if_needs_sorting(remap_cs%regrid_cs,needs_sorting)
+    if ( needs_sorting ) then
+      ! Plug into 3d array, not sure which one
+    endif
   enddo ; enddo
 
 end subroutine diag_remap_update
