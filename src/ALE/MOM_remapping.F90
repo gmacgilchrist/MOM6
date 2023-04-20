@@ -157,7 +157,7 @@ subroutine buildGridFromH(nz, h, x)
 end subroutine buildGridFromH
 
 !> Remaps column of values u0 on grid h0 to grid h1 assuming the top edge is aligned.
-subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edge, PCM_cell)
+subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edge, PCM_cell, ksort)
   type(remapping_CS),  intent(in)  :: CS !< Remapping control structure
   integer,             intent(in)  :: n0 !< Number of cells on source grid
   real, dimension(n0), intent(in)  :: h0 !< Cell widths on source grid [H]
@@ -165,6 +165,7 @@ subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edg
   integer,             intent(in)  :: n1 !< Number of cells on target grid
   real, dimension(n1), intent(in)  :: h1 !< Cell widths on target grid [H]
   real, dimension(n1), intent(out) :: u1 !< Cell averages on target grid [A]
+  integer, dimension(n0), optional, intent(in)   :: ksort !< Array of indices returning monotonic coordinate
   real, optional,      intent(in)  :: h_neglect !< A negligibly small width for the
                                          !! purpose of cell reconstructions
                                          !! in the same units as h0 [H]
@@ -182,9 +183,14 @@ subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edg
   real :: hNeglect, hNeglect_edge ! Negligibly small cell widths in the same units as h0 [H]
   integer :: iMethod   ! An integer indicating the integration method used
   integer :: k
+  real, dimension(n0) :: phi
 
   hNeglect = 1.0e-30 ; if (present(h_neglect)) hNeglect = h_neglect
   hNeglect_edge = 1.0e-10 ; if (present(h_neglect_edge)) hNeglect_edge = h_neglect_edge
+
+  if ( present(ksort) ) then
+    call sort_scalar_from_ksort_1d(ksort,phi,n0)
+  endif
 
   call build_reconstructions_1d( CS, n0, h0, u0, ppoly_r_coefs, ppoly_r_E, ppoly_r_S, iMethod, &
                                hNeglect, hNeglect_edge, PCM_cell )
@@ -199,6 +205,19 @@ subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edg
                                                      n1, h1, u1, iMethod, uh_err, "remapping_core_h")
 
 end subroutine remapping_core_h
+
+subroutine sort_scalar_from_ksort_1d(ksort,phi,nk)
+  integer, intent(in)                  :: nk
+  integer, dimension(nk), intent(in)  :: ksort
+  real, dimension(nk), intent(inout)  :: phi
+  ! Local
+  integer :: k
+  
+  do k=1, nk
+    phi(k)=phi(ksort(k))
+  enddo
+  
+end subroutine sort_scalar_from_ksort_1d
 
 !> Remaps column of values u0 on grid h0 to implied grid h1
 !! where the interfaces of h1 differ from those of h0 by dx.
