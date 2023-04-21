@@ -220,6 +220,7 @@ subroutine initialize_regridding(CS, GV, US, max_depth, param_file, mdl, coord_m
   logical :: remap_answers_2018
   integer :: remap_answer_date    ! The vintage of the remapping expressions to use.
   real :: filt_len, strat_tol, tmpReal, P_Ref
+  logical :: needs_sorting
   real :: maximum_depth ! The maximum depth of the ocean [m] (not in Z).
   real :: dz_fixed_sfc, Rho_avg_depth, nlay_sfc_int
   real :: adaptTimeRatio, adaptZoom, adaptZoomCoeff, adaptBuoyCoeff, adaptAlpha
@@ -575,6 +576,23 @@ subroutine initialize_regridding(CS, GV, US, max_depth, param_file, mdl, coord_m
                  "some artificial compressibility solely to make homogeneous "//&
                  "regions appear stratified.", units="nondim", default=0.)
     call set_regrid_params(CS, compress_fraction=tmpReal, ref_pressure=P_Ref)
+  endif
+
+  if (coord_is_state_dependent) then
+    if (main_parameters) then
+      call get_param(param_file, mdl, create_coord_param(param_prefix, "NEEDS_SORTING", param_suffix), needs_sorting, &
+                   "Specifies whether the variable from which the coordinate is derived"//&
+                   " (e.g. density) should be vertically sorted (to be monotonically increasing) "//&
+                   "prior to regridding. The sorting is carried over to all remapped fields.", &
+                   default=.false.)
+    else
+      call get_param(param_file, mdl, create_coord_param(param_prefix, "NEEDS_SORTING", param_suffix), needs_sorting, &
+                    "Specifies whether the variable from which the coordinate is derived"//&
+                    " (e.g. density) should be vertically sorted (to be monotonically increasing) "//&
+                    "prior to regridding. The sorting is carried over to all remapped fields.", &
+      default=.false.)
+    endif
+    call set_regrid_params(CS, needs_sorting=needs_sorting)
   endif
 
   if (main_parameters) then
