@@ -271,7 +271,7 @@ end function
 !! height or layer thicknesses changes. In the case of density-based
 !! coordinates then technically we should also regenerate the
 !! target grid whenever T/S change.
-subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_target)
+subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_target, ksort3d)
   type(diag_remap_ctrl),   intent(inout) :: remap_cs !< Diagnostic coordinate control structure
   type(ocean_grid_type),   pointer    :: G  !< The ocean's grid type
   type(verticalGrid_type), intent(in) :: GV !< ocean vertical grid structure
@@ -281,6 +281,7 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
   real, dimension(:,:,:),  intent(in) :: S  !< New salinities [S ~> ppt]
   type(EOS_type),          intent(in) :: eqn_of_state !< A pointer to the equation of state
   real, dimension(:,:,:),  intent(inout) :: h_target  !< The new diagnostic thicknesses [H ~> m or kg m-2]
+  integer, optional, dimension(:,:,:), intent(inout) :: ksort3d
 
   ! Local variables
   real, dimension(remap_cs%nz + 1) :: zInterfaces ! Interface positions [H ~> m or kg m-2]
@@ -346,8 +347,11 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
 
     call check_if_needs_sorting(remap_cs%regrid_cs,needs_sorting)
     if ( needs_sorting ) then
-      remap_cs%ksort3d(i,j,:) = ksort
-      ! Plug into 3d array, not sure which one
+      do k = 1,nz
+        print *, 'Eeep! diag_remap_update'
+        write(*,*) ksort(k)
+        ksort3d(i,j,k) = ksort(k)
+      enddo
     endif
   enddo ; enddo
 
@@ -395,6 +399,10 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   ! Symmetric grid offset under 1-based indexing; see header for details.
   shift = 0 ; if (G%symmetric) shift = 1
 
+  ! print the values of the array to the screen
+  print *, 'Eeep! diag_remap_do_remap'
+  !write(*,*) size(remap_cs%ksort3d)
+
   if (staggered_in_x .and. .not. staggered_in_y) then
     ! U-points
     do j=G%jsc, G%jec
@@ -406,8 +414,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         endif
         h_src(:) = 0.5 * (h(i_lo,j,:) + h(i_hi,j,:))
         h_dest(:) = 0.5 * (remap_cs%h(i_lo,j,:) + remap_cs%h(i_hi,j,:))
-        ! I'm not sure how to do with staggered grids yet
-        !ksort(:) = remap_cs%ksort3d(i_lo,j,:)
+        ! I'm not sure what to do with staggered grids yet
         call remapping_core_h(remap_cs%remap_cs, &
                               nz_src, h_src(:), field(I1,j,:), &
                               nz_dest, h_dest(:), remapped_field(I1,j,:), &
