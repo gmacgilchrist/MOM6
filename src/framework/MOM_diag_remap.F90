@@ -113,6 +113,7 @@ type :: diag_remap_ctrl
   real, dimension(:,:,:), allocatable :: h !< Remap grid thicknesses [H ~> m or kg m-2]
   real, dimension(:,:,:), allocatable :: h_extensive !< Remap grid thicknesses for extensive
                                            !! variables [H ~> m or kg m-2]
+  integer, dimension(:,:,:), allocatable :: ksort3d !< Indices to return sorted array
   integer :: interface_axes_id = 0 !< Vertical axes id for remapping at interfaces
   integer :: layer_axes_id = 0 !< Vertical axes id for remapping on layers
   integer :: answer_date      !< The vintage of the order of arithmetic and expressions
@@ -345,6 +346,7 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
 
     call check_if_needs_sorting(remap_cs%regrid_cs,needs_sorting)
     if ( needs_sorting ) then
+      remap_cs%ksort3d(i,j,:) = ksort
       ! Plug into 3d array, not sure which one
     endif
   enddo ; enddo
@@ -372,6 +374,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   integer :: i1, j1                 !< 1-based index
   integer :: i_lo, i_hi, j_lo, j_hi !< (uv->h) interpolation indices
   integer :: shift                  !< Symmetric offset for 1-based indexing
+  integer, dimension(size(h,3)) :: ksort
 
   call assert(remap_cs%initialized, 'diag_remap_do_remap: remap_cs not initialized.')
   call assert(size(field, 3) == size(h, 3), &
@@ -403,6 +406,8 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         endif
         h_src(:) = 0.5 * (h(i_lo,j,:) + h(i_hi,j,:))
         h_dest(:) = 0.5 * (remap_cs%h(i_lo,j,:) + remap_cs%h(i_hi,j,:))
+        ! I'm not sure how to do with staggered grids yet
+        !ksort(:) = remap_cs%ksort3d(i_lo,j,:)
         call remapping_core_h(remap_cs%remap_cs, &
                               nz_src, h_src(:), field(I1,j,:), &
                               nz_dest, h_dest(:), remapped_field(I1,j,:), &
@@ -435,10 +440,11 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         endif
         h_src(:) = h(i,j,:)
         h_dest(:) = remap_cs%h(i,j,:)
+        ksort(:) = remap_cs%ksort3d(i,j,:)
         call remapping_core_h(remap_cs%remap_cs, &
                               nz_src, h_src(:), field(i,j,:), &
                               nz_dest, h_dest(:), remapped_field(i,j,:), &
-                              h_neglect, h_neglect_edge)
+                              h_neglect, h_neglect_edge, ksort=ksort)
       enddo
     enddo
   else
