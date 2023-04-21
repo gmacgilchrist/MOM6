@@ -378,7 +378,8 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   integer :: i1, j1                 !< 1-based index
   integer :: i_lo, i_hi, j_lo, j_hi !< (uv->h) interpolation indices
   integer :: shift                  !< Symmetric offset for 1-based indexing
-  integer, dimension(size(h,3)) :: ksort
+  logical :: do_sort = .false.
+  integer, allocatable, dimension(size(h,3)) :: ksort
 
   call assert(remap_cs%initialized, 'diag_remap_do_remap: remap_cs not initialized.')
   call assert(size(field, 3) == size(h, 3), &
@@ -402,6 +403,9 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   ! print the values of the array to the screen
   print *, 'Eeep! diag_remap_do_remap'
   !write(*,*) size(remap_cs%ksort3d)
+  if ( allocated(remap_cs%ksort3d) ) then
+    do_sort = .true.
+  endif
 
   if (staggered_in_x .and. .not. staggered_in_y) then
     ! U-points
@@ -447,11 +451,18 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         endif
         h_src(:) = h(i,j,:)
         h_dest(:) = remap_cs%h(i,j,:)
-        ksort(:) = remap_cs%ksort3d(i,j,:)
-        call remapping_core_h(remap_cs%remap_cs, &
-                              nz_src, h_src(:), field(i,j,:), &
-                              nz_dest, h_dest(:), remapped_field(i,j,:), &
-                              h_neglect, h_neglect_edge, ksort=ksort)
+        if ( do_sort ) then
+          ksort(:) = remap_cs%ksort3d(i,j,:)
+          call remapping_core_h(remap_cs%remap_cs, &
+                                nz_src, h_src(:), field(i,j,:), &
+                                nz_dest, h_dest(:), remapped_field(i,j,:), &
+                                h_neglect, h_neglect_edge, ksort=ksort)
+        else
+          call remapping_core_h(remap_cs%remap_cs, &
+                                nz_src, h_src(:), field(i,j,:), &
+                                nz_dest, h_dest(:), remapped_field(i,j,:), &
+                                h_neglect, h_neglect_edge)
+        endif
       enddo
     enddo
   else
