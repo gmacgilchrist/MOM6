@@ -553,7 +553,7 @@ end subroutine set_interp_extrap
 subroutine sort_scalar_k_1d(nz, phi, ksort)
   integer,                 intent(in)     :: nz !< Number of levels on grid
   real, dimension(nz),     intent(inout)  :: phi  !< Array of scalar quantity to be sorted
-  integer, dimension(nz),  intent(out)    :: ksort !< An array of indicies for a 
+  integer, dimension(nz),  intent(inout)    :: ksort !< An array of indicies for a 
                                                   !! monotonically increasing scalar
 !------------------------------------------------------------------------------
 ! Check each water column to see if a given scalar is monotonically increasing.
@@ -565,6 +565,11 @@ subroutine sort_scalar_k_1d(nz, phi, ksort)
   integer   :: k
   real      :: P0, P1       ! tracers
   logical   :: monotonic
+
+  ! First fill ksort with normal indices
+  do k = 1,nz
+    ksort(k) = k
+  enddo
 
   ! Repeat swapping of indices until complete
   do
@@ -580,7 +585,6 @@ subroutine sort_scalar_k_1d(nz, phi, ksort)
         monotonic = .false.
       endif
     enddo  ! k
-
     if ( monotonic ) exit
   enddo
 

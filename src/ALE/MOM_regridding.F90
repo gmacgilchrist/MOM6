@@ -590,7 +590,7 @@ subroutine initialize_regridding(CS, GV, US, max_depth, param_file, mdl, coord_m
                     "Specifies whether the variable from which the coordinate is derived"//&
                     " (e.g. density) should be vertically sorted (to be monotonically increasing) "//&
                     "prior to regridding. The sorting is carried over to all remapped fields.", &
-      default=.false.)
+                    default=.false.)
     endif
     call set_regrid_params(CS, needs_sorting=needs_sorting)
   endif
@@ -2459,6 +2459,7 @@ subroutine set_regrid_params( CS, boundary_extrapolation, min_thickness, old_gri
   if (present(min_thickness)) CS%min_thickness = min_thickness
   if (present(compress_fraction)) CS%compressibility_fraction = compress_fraction
   if (present(ref_pressure)) CS%ref_pressure = ref_pressure
+  if (present(needs_sorting)) CS%needs_sorting = needs_sorting
   if (present(integrate_downward_for_e)) CS%integrate_downward_for_e = integrate_downward_for_e
   if (present(remap_answers_2018)) then
     if (remap_answers_2018) then
@@ -2664,7 +2665,7 @@ end function rho_function1
 
 subroutine check_if_needs_sorting(CS,needs_sorting)
   type(regridding_CS),  intent(in)  :: CS
-  logical,              intent(out) :: needs_sorting
+  logical,              intent(inout) :: needs_sorting
 
   needs_sorting = CS%needs_sorting
 

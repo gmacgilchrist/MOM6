@@ -341,15 +341,14 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
 !                           GV%Z_to_H*(G%bathyT(i,j)+G%Z_ref), sum(h(i,j,:)), zInterfaces)
       call MOM_error(FATAL,"diag_remap_update: HYCOM1 coordinate not coded for diagnostics yet!")
     endif
+
     do k = 1,nz
       h_target(i,j,k) = zInterfaces(k) - zInterfaces(k+1)
     enddo
 
     call check_if_needs_sorting(remap_cs%regrid_cs,needs_sorting)
     if ( needs_sorting ) then
-      do k = 1,nz
-        print *, 'Eeep! diag_remap_update'
-        write(*,*) ksort(k)
+      do k = 1,GV%ke
         ksort3d(i,j,k) = ksort(k)
       enddo
     endif
@@ -378,8 +377,8 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   integer :: i1, j1                 !< 1-based index
   integer :: i_lo, i_hi, j_lo, j_hi !< (uv->h) interpolation indices
   integer :: shift                  !< Symmetric offset for 1-based indexing
-  logical :: do_sort = .false.
-  integer, allocatable, dimension(size(h,3)) :: ksort
+  logical :: needs_sorting = .false.
+  integer, dimension(GV%ke) :: ksort
 
   call assert(remap_cs%initialized, 'diag_remap_do_remap: remap_cs not initialized.')
   call assert(size(field, 3) == size(h, 3), &
@@ -401,11 +400,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   shift = 0 ; if (G%symmetric) shift = 1
 
   ! print the values of the array to the screen
-  print *, 'Eeep! diag_remap_do_remap'
-  !write(*,*) size(remap_cs%ksort3d)
-  if ( allocated(remap_cs%ksort3d) ) then
-    do_sort = .true.
-  endif
+  call check_if_needs_sorting(remap_cs%regrid_cs,needs_sorting)
 
   if (staggered_in_x .and. .not. staggered_in_y) then
     ! U-points
@@ -451,7 +446,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         endif
         h_src(:) = h(i,j,:)
         h_dest(:) = remap_cs%h(i,j,:)
-        if ( do_sort ) then
+        if ( needs_sorting ) then
           ksort(:) = remap_cs%ksort3d(i,j,:)
           call remapping_core_h(remap_cs%remap_cs, &
                                 nz_src, h_src(:), field(i,j,:), &

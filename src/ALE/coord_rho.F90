@@ -111,7 +111,7 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
   real, dimension(CS%nk+1), &
                        intent(inout) :: z_interface !< Absolute positions of interfaces
   integer, optional, dimension(nz), &
-                       intent(out) :: ksort !< Array of indicies for a 
+                       intent(inout) :: ksort !< Array of indicies for a 
                                             !! monotonically increasing scalae
   real, optional,      intent(in)    :: z_rigid_top !< The height of a rigid top (positive upward in the same
   !! units as depth) [Z ~> m] or [H ~> m or kg m-2]
