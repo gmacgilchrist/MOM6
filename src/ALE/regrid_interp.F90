@@ -562,7 +562,7 @@ subroutine sort_scalar_k_1d(nz, phi, ksort)
 !------------------------------------------------------------------------------
 
   ! Local variables
-  integer   :: k
+  integer   :: k, tmp
   real      :: P0, P1       ! tracers
   logical   :: monotonic
 
@@ -581,12 +581,16 @@ subroutine sort_scalar_k_1d(nz, phi, ksort)
       ! below it, we swap the cell indices
       if ( P0 > P1 ) then
         phi(k) = P1 ; phi(k+1) = P0
-        ksort(k) = k+1 ; ksort(k+1) = k
+        tmp = ksort(k)
+        ksort(k) = ksort(k+1) ; ksort(k+1) = tmp
+        ! print *, "k ", k, "P0 ", P0, "P1 ", P1, "ksort(k) ", ksort(k), "ksort(k+1) ", ksort(k+1)
         monotonic = .false.
       endif
     enddo  ! k
     if ( monotonic ) exit
   enddo
+  ! print *, "ksort"
+  ! print *, ksort
 
 end subroutine sort_scalar_k_1d
 

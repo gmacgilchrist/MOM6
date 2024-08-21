@@ -160,6 +160,7 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
       densities(k) = densities(mapping(k))
     enddo
 
+    ! Sort densities and get scalar array for sorting
     if ( CS%needs_sorting ) then
       call sort_scalar_k_1d(nz, densities, ksort)
     endif
