@@ -379,6 +379,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   integer :: shift                  !< Symmetric offset for 1-based indexing
   logical :: needs_sorting = .false.
   integer, dimension(GV%ke) :: ksort
+  real, dimension(GV%ke) :: field1d
 
   call assert(remap_cs%initialized, 'diag_remap_do_remap: remap_cs not initialized.')
   call assert(size(field, 3) == size(h, 3), &
@@ -448,8 +449,11 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         h_dest(:) = remap_cs%h(i,j,:)
         if ( needs_sorting ) then
           ksort(:) = remap_cs%ksort3d(i,j,:)
+          do k=1, nz_src
+            field1d(k) = field(i,j,ksort(k))
+          enddo
           call remapping_core_h(remap_cs%remap_cs, &
-                                nz_src, h_src(:), field(i,j,:), &
+                                nz_src, h_src(:), field1d, &
                                 nz_dest, h_dest(:), remapped_field(i,j,:), &
                                 h_neglect, h_neglect_edge, ksort=ksort)
         else

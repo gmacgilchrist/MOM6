@@ -189,7 +189,10 @@ subroutine remapping_core_h(CS, n0, h0, u0, n1, h1, u1, h_neglect, h_neglect_edg
   hNeglect_edge = 1.0e-10 ; if (present(h_neglect_edge)) hNeglect_edge = h_neglect_edge
 
   if ( present(ksort) ) then
-    call sort_scalar_from_ksort_1d(ksort,u0,n0)
+    do k=1, n0
+      u0(k)=u0(ksort(k))
+    enddo
+    !call sort_scalar_from_ksort_1d(ksort,phi,n0)
   endif
 
   call build_reconstructions_1d( CS, n0, h0, u0, ppoly_r_coefs, ppoly_r_E, ppoly_r_S, iMethod, &
