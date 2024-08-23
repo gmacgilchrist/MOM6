@@ -373,7 +373,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
   real, dimension(size(h,3)) :: h_src    ! A column of source thicknesses [H ~> m or kg m-2]
   real :: h_neglect, h_neglect_edge ! Negligible thicknesses [H ~> m or kg m-2]
   integer :: nz_src, nz_dest
-  integer :: i, j                   !< Grid index
+  integer :: i, j, k                   !< Grid index
   integer :: i1, j1                 !< 1-based index
   integer :: i_lo, i_hi, j_lo, j_hi !< (uv->h) interpolation indices
   integer :: shift                  !< Symmetric offset for 1-based indexing
@@ -448,7 +448,9 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         h_src(:) = h(i,j,:)
         h_dest(:) = remap_cs%h(i,j,:)
         if ( needs_sorting ) then
+          ! Get sorting indices
           ksort(:) = remap_cs%ksort3d(i,j,:)
+          ! Sort field to be remapped
           do k=1, nz_src
             field1d(k) = field(i,j,ksort(k))
           enddo
