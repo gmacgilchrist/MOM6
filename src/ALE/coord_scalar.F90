@@ -12,7 +12,7 @@ use regrid_interp,    only : sort_scalar_k_1d
 
 implicit none ; private
 
-!> Control structure containing required parameters for the rho coordinate
+!> Control structure containing required parameters for the scalar coordinate
 type, public :: scalar_CS ; private
 
   !> Number of layers
@@ -31,7 +31,7 @@ type, public :: scalar_CS ; private
   !> Nominal density of interfaces [R ~> kg m-3]
   real, allocatable, dimension(:) :: target_density
 
-  !> If true, water column is sorted in rho prior to regrid
+  !> If true, water column is sorted in scalar prior to regrid
   logical :: needs_sorting = .false.
 
   !> Interpolation control structure
@@ -43,9 +43,9 @@ public init_coord_scalar, set_scalar_params, build_scalar_column, old_inflate_la
 
 contains
 
-!> Initialise a rho_CS with pointers to parameters
+!> Initialise a scalar_CS with pointers to parameters
 subroutine init_coord_scalar(CS, nk, ref_pressure, target_density, needs_sorting, interp_CS)
-  type(rho_CS),         pointer    :: CS !< Unassociated pointer to hold the control structure
+  type(scalar_CS),         pointer    :: CS !< Unassociated pointer to hold the control structure
   integer,              intent(in) :: nk !< Number of layers in the grid
   real,                 intent(in) :: ref_pressure !< Coordinate reference pressure [R L2 T-2 ~> Pa]
   real, dimension(:),   intent(in) :: target_density !< Nominal density of interfaces [R ~> kg m-3]
@@ -64,9 +64,9 @@ subroutine init_coord_scalar(CS, nk, ref_pressure, target_density, needs_sorting
 
 end subroutine init_coord_scalar
 
-!> This subroutine deallocates memory in the control structure for the coord_rho module
+!> This subroutine deallocates memory in the control structure for the coord_scalar module
 subroutine end_coord_scalar(CS)
-  type(rho_CS), pointer :: CS !< Coordinate control structure
+  type(scalar_CS), pointer :: CS !< Coordinate control structure
 
   ! nothing to do
   if (.not. associated(CS)) return
@@ -74,7 +74,7 @@ subroutine end_coord_scalar(CS)
   deallocate(CS)
 end subroutine end_coord_scalar
 
-!> This subroutine can be used to set the parameters for the coord_rho module
+!> This subroutine can be used to set the parameters for the coord_scalar module
 subroutine set_scalar_params(CS, min_thickness, integrate_downward_for_e, interp_CS, ref_pressure, needs_sorting)
   type(scalar_CS),      pointer    :: CS !< Coordinate control structure
   real,    optional, intent(in) :: min_thickness !< Minimum allowed thickness [H ~> m or kg m-2]
@@ -87,7 +87,7 @@ subroutine set_scalar_params(CS, min_thickness, integrate_downward_for_e, interp
 
   type(interp_CS_type), optional, intent(in) :: interp_CS !< Controls for interpolation
 
-  if (.not. associated(CS)) call MOM_error(FATAL, "set_rho_params: CS not associated")
+  if (.not. associated(CS)) call MOM_error(FATAL, "set_scalar_params: CS not associated")
 
   if (present(min_thickness)) CS%min_thickness = min_thickness
   if (present(integrate_downward_for_e)) CS%integrate_downward_for_e = integrate_downward_for_e
@@ -96,13 +96,13 @@ subroutine set_scalar_params(CS, min_thickness, integrate_downward_for_e, interp
   if (present(needs_sorting)) CS%needs_sorting = needs_sorting
 end subroutine set_scalar_params
 
-!> Build a rho coordinate column
+!> Build a scalar coordinate column
 !!
 !! 1. Density profiles are calculated on the source grid.
 !! 2. Positions of target densities (for interfaces) are found by interpolation.
 subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
                             ksort, z_rigid_top, eta_orig, h_neglect, h_neglect_edge)
-  type(rho_CS),        intent(in)    :: CS !< coord_rho control structure
+  type(scalar_CS),        intent(in)    :: CS !< coord_scalar control structure
   integer,             intent(in)    :: nz !< Number of levels on source grid (i.e. length of  h, T, S)
   real,                intent(in)    :: depth !< Depth of ocean bottom (positive downward) [H ~> m or kg m-2]
   real, dimension(nz), intent(in)    :: h  !< Layer thicknesses [H ~> m or kg m-2]
@@ -206,9 +206,9 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
 
 end subroutine build_scalar_column
 
-!### build_rho_column_iteratively is never used or called.
+!### build_scalar_column_iteratively is never used or called.
 
-!> Iteratively build a rho coordinate column
+!> Iteratively build a scalar coordinate column
 !!
 !! The algorithm operates as follows within each column:
 !!
@@ -222,7 +222,7 @@ end subroutine build_scalar_column
 !!    iterations is reached, whichever comes first.
 subroutine build_scalar_column_iteratively(CS, remapCS, nz, depth, h, T, S, eqn_of_state, &
                                         zInterface, h_neglect, h_neglect_edge, dev_tol)
-  type(rho_CS),          intent(in)    :: CS !< Regridding control structure
+  type(scalar_CS),          intent(in)    :: CS !< Regridding control structure
   type(remapping_CS),    intent(in)    :: remapCS !< Remapping parameters and options
   integer,               intent(in)    :: nz !< Number of levels
   real,                  intent(in)    :: depth !< Depth of ocean bottom [Z ~> m]
