@@ -1,5 +1,5 @@
-!> provides runtime remapping of diagnostics to z star, sigma and
-!! rho vertical coordinates.
+!> provides runtime remapping of diagnostics to z star, sigma,
+!! rho and scalar vertical coordinates.
 !!
 !! The diag_remap_ctrl type represents a remapping of diagnostics to a particular
 !! vertical coordinate. The module is used by the diag mediator module in the
@@ -74,11 +74,12 @@ use MOM_regridding,       only : regridding_CS, initialize_regridding
 use MOM_regridding,       only : end_regridding
 use MOM_regridding,       only : set_regrid_params, get_regrid_size
 use MOM_regridding,       only : getCoordinateInterfaces
-use MOM_regridding,       only : get_zlike_CS, get_sigma_CS, get_rho_CS
+use MOM_regridding,       only : get_zlike_CS, get_sigma_CS, get_rho_CS, get_scalar_CS
 use regrid_consts,        only : coordinateMode
 use coord_zlike,          only : build_zstar_column
 use coord_sigma,          only : build_sigma_column
 use coord_rho,            only : build_rho_column
+use coord_scalar,         only : build_scalar_column
 use MOM_regridding,       only : check_if_needs_sorting
 
 
@@ -212,6 +213,9 @@ subroutine diag_remap_configure_axes(remap_cs, GV, US, param_file)
   elseif (remap_cs%vertical_coord == coordinateMode('RHO')) then
     units = 'kg m-3'
     longname = 'Target Potential Density'
+  elseif (remap_cs%vertical_coord == coordinateMode('SCALAR')) then
+    units = 'degC'
+    longname = 'Target Scalar Values'
   else
     units = 'meters'
     longname = 'Depth'
@@ -332,6 +336,10 @@ subroutine diag_remap_update(remap_cs, G, GV, US, h, T, S, eqn_of_state, h_targe
       call build_rho_column(get_rho_CS(remap_cs%regrid_cs), GV%ke, &
                             GV%Z_to_H*(G%bathyT(i,j)+G%Z_ref), h(i,j,:), T(i,j,:), S(i,j,:), &
                             eqn_of_state, zInterfaces, ksort, h_neglect, h_neglect_edge)
+    elseif (remap_cs%vertical_coord == coordinateMode('SCALAR')) then
+      call build_scalar_column(get_scalar_CS(remap_cs%regrid_cs), GV%ke, &
+                               GV%Z_to_H*(G%bathyT(i,j)+G%Z_ref), h(i,j,:), T(i,j,:), S(i,j,:), &
+                               eqn_of_state, zInterfaces, ksort, h_neglect, h_neglect_edge)
     elseif (remap_cs%vertical_coord == coordinateMode('SLIGHT')) then
 !     call build_slight_column(remap_cs%regrid_cs,remap_cs%remap_cs, nz, &
 !                           GV%Z_to_H*(G%bathyT(i,j)+G%Z_ref), sum(h(i,j,:)), zInterfaces)
