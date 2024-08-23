@@ -2097,7 +2097,7 @@ function uniformResolution(nk,coordMode,maxDepth,rhoLight,rhoHeavy)
            REGRIDDING_SIGMA_SHELF_ZSTAR, REGRIDDING_ADAPTIVE )
       uniformResolution(:) = maxDepth / real(nk)
 
-    case ( REGRIDDING_RHO )
+    case ( REGRIDDING_RHO, REGRIDDING_SCALAR )
       uniformResolution(:) = (rhoHeavy - rhoLight) / real(nk)
 
     case ( REGRIDDING_SIGMA )
@@ -2336,6 +2336,16 @@ function getCoordinateInterfaces( CS, undo_scaling )
   ! When using a coordinate with target densities, we need to get the actual
   ! densities, rather than computing the interfaces based on resolution
   if (CS%regridding_scheme == REGRIDDING_RHO) then
+    if (.not. CS%target_density_set) &
+      call MOM_error(FATAL, 'MOM_regridding, getCoordinateInterfaces: '//&
+                            'target densities not set!')
+
+    if (unscale) then
+      getCoordinateInterfaces(:) = CS%coord_scale * CS%target_density(:)
+    else
+      getCoordinateInterfaces(:) = CS%target_density(:)
+    endif
+  elseif (CS%regridding_scheme == REGRIDDING_SCALAR) then
     if (.not. CS%target_density_set) &
       call MOM_error(FATAL, 'MOM_regridding, getCoordinateInterfaces: '//&
                             'target densities not set!')
