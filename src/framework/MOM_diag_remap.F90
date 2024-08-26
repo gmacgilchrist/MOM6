@@ -460,6 +460,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
           ksort(:) = remap_cs%ksort3d(i,j,:)
           ! Sort field to be remapped
           do k=1, nz_src
+            h_src(k) = h(i,j,ksort(k))
             field1d(k) = field(i,j,ksort(k))
           enddo
           call remapping_core_h(remap_cs%remap_cs, &
