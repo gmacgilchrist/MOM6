@@ -132,6 +132,7 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
   real, dimension(CS%nk) :: h_new ! New thicknesses [H ~> m or kg m-2]
   real, dimension(CS%nk+1) :: x1  ! Interface heights [H ~> m or kg m-2]
   real :: z0_top, eta ! Thicknesses or heights [Z ~> m] or [H ~> m or kg m-2]
+  real, dimension(nz) :: h_nv_tmp     ! Dummy variable for thicknesses
 
   ! Construct source column with vanished layers removed (stored in h_nv)
   call copy_finite_thicknesses(nz, h, CS%min_thickness, count_nonzero_layers, h_nv, mapping)
@@ -161,7 +162,6 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
       call sort_scalar_k_1d(nz, densities, ksort)
       ! Sort thicknesses and interfaces
       h_nv_tmp(:) = h_nv
-      xTmp_tmp(:) = xTmp
       do k=1, count_nonzero_layers
         h_nv(k) = h_nv_tmp(ksort(k))
       enddo
