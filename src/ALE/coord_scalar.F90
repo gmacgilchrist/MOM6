@@ -133,6 +133,8 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
   real, dimension(CS%nk) :: h_new ! New thicknesses [H ~> m or kg m-2]
   real, dimension(CS%nk+1) :: x1  ! Interface heights [H ~> m or kg m-2]
   real :: z0_top, eta ! Thicknesses or heights [Z ~> m] or [H ~> m or kg m-2]
+  real, dimension(nz) :: h_nv_tmp !
+  real, dimension(nz+1) :: xTmp_tmp !
 
   ! Construct source column with vanished layers removed (stored in h_nv)
   call copy_finite_thicknesses(nz, h, CS%min_thickness, count_nonzero_layers, h_nv, mapping)
@@ -149,6 +151,7 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
 
 
   if (count_nonzero_layers > 1) then
+
     xTmp(1) = 0.0
     do k = 1,count_nonzero_layers
       xTmp(k+1) = xTmp(k) + h_nv(k)
@@ -161,15 +164,37 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
       densities(k) = T(mapping(k))
     enddo
 
+    print *, "xTmp before sort", xTmp
+    print *, "h_nv before sort", h_nv
+
     ! Sort densities and get scalar array for sorting
     if ( CS%needs_sorting ) then
-      call sort_scalar_k_1d(nz, densities, ksort)
+      call sort_scalar_k_1d(count_nonzero_layers, densities, ksort)
+      ! Sort thicknesses and interfaces
+      h_nv_tmp(:) = h_nv
+      xTmp_tmp(:) = xTmp
+      do k=1, count_nonzero_layers
+        h_nv(k) = h_nv_tmp(ksort(k))
+      enddo
     endif
+
+    ! Get new interfaces based on thicknesses
+    xTmp(1) = 0.0
+    do k = 1,count_nonzero_layers
+      xTmp(k+1) = xTmp(k) + h_nv(k)
+    enddo
+
+    print *, "xTmp after sort", xTmp
+    print *, "h_nv after sort", h_nv
 
     ! Based on source column density profile, interpolate to generate a new grid
     call build_and_interpolate_grid(CS%interp_CS, densities, count_nonzero_layers, &
                                     h_nv, xTmp, CS%target_density, CS%nk, h_new, &
                                     x1, h_neglect, h_neglect_edge)
+    
+    print *, "densities", densities
+    print *, "ksort", ksort
+    print *, "h_new", h_new
 
     ! Inflate vanished layers
     call old_inflate_layers_1d(CS%min_thickness, CS%nk, h_new)
