@@ -148,10 +148,6 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
 
 
   if (count_nonzero_layers > 1) then
-    xTmp(1) = 0.0
-    do k = 1,count_nonzero_layers
-      xTmp(k+1) = xTmp(k) + h_nv(k)
-    enddo
 
     ! Compute densities on source column
     pres(:) = CS%ref_pressure
@@ -163,7 +159,19 @@ subroutine build_rho_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface, &
     ! Sort densities and get scalar array for sorting
     if ( CS%needs_sorting ) then
       call sort_scalar_k_1d(nz, densities, ksort)
+      ! Sort thicknesses and interfaces
+      h_nv_tmp(:) = h_nv
+      xTmp_tmp(:) = xTmp
+      do k=1, count_nonzero_layers
+        h_nv(k) = h_nv_tmp(ksort(k))
+      enddo
     endif
+
+    ! Calculate interfaces of column
+    xTmp(1) = 0.0
+    do k = 1,count_nonzero_layers
+      xTmp(k+1) = xTmp(k) + h_nv(k)
+    enddo
 
     ! Based on source column density profile, interpolate to generate a new grid
     call build_and_interpolate_grid(CS%interp_CS, densities, count_nonzero_layers, &
