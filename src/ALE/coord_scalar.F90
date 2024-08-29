@@ -158,9 +158,6 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
       densities(k) = T(mapping(k))
     enddo
 
-    print *, "xTmp before sort", xTmp
-    print *, "h_nv before sort", h_nv
-
     ! Sort densities and get scalar array for sorting
     if ( CS%needs_sorting ) then
       call sort_scalar_k_1d(count_nonzero_layers, densities, ksort)
@@ -177,17 +174,10 @@ subroutine build_scalar_column(CS, nz, depth, h, T, S, eqn_of_state, z_interface
       xTmp(k+1) = xTmp(k) + h_nv(k)
     enddo
 
-    print *, "xTmp after sort", xTmp
-    print *, "h_nv after sort", h_nv
-
     ! Based on source column density profile, interpolate to generate a new grid
     call build_and_interpolate_grid(CS%interp_CS, densities, count_nonzero_layers, &
                                     h_nv, xTmp, CS%target_density, CS%nk, h_new, &
                                     x1, h_neglect, h_neglect_edge)
-    
-    print *, "densities", densities
-    print *, "ksort", ksort
-    print *, "h_new", h_new
 
     ! Inflate vanished layers
     call old_inflate_layers_1d(CS%min_thickness, CS%nk, h_new)

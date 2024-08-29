@@ -458,7 +458,7 @@ subroutine diag_remap_do_remap(remap_cs, G, GV, h, staggered_in_x, staggered_in_
         if ( needs_sorting ) then
           ! Get sorting indices
           ksort(:) = remap_cs%ksort3d(i,j,:)
-          ! Sort field to be remapped
+          ! Sort source thicknesses, and field to be remapped
           do k=1, nz_src
             h_src(k) = h(i,j,ksort(k))
             field1d(k) = field(i,j,ksort(k))
